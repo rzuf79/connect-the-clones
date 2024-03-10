@@ -8,6 +8,12 @@ public class Dot : MonoBehaviour
     private const int MAX_MINOR_VALUE = 10;
     private const string SUFFIXES = " KMBTABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
+    private const float ANIM_TIME_SPAWN = .2f;
+    private const float ANIM_TIME_INCREMENT = .2f;
+    private const float ANIM_TIME_MERGE_FLY = .2f;
+    private const float ANIM_TIME_FALL = .2f;
+    private const float ANIM_TIME_FALL_BOUNCE = .14f;
+
     public event EventDelegate<Dot> eventPressed;
     public event EventDelegate<Dot> eventReentered;
     public event EventDelegate<Dot> eventKilled;
@@ -67,13 +73,13 @@ public class Dot : MonoBehaviour
         Revive();
         Value = value;
 
-        Tweener.AddTween(imageDot.transform, Tweener.Type.Scale, Vector3.zero, Vector3.one, .2f,
+        Tweener.AddTween(imageDot.transform, Tweener.Type.Scale, Vector3.zero, Vector3.one, ANIM_TIME_SPAWN,
             Tweener.InterpolationType.EaseFrom, Tweener.RepeatMode.Once, 0);
     }
 
     public void AnimateIncrement()
     {
-        Tweener.AddTween(imageDot.transform, Tweener.Type.Scale, Vector3.one * 1.2f, Vector3.one, .2f,
+        Tweener.AddTween(imageDot.transform, Tweener.Type.Scale, Vector3.one * 1.2f, Vector3.one, ANIM_TIME_INCREMENT,
             Tweener.InterpolationType.Smooth, Tweener.RepeatMode.Once, 0, OnIncrementAnimFinished);
     }
 
@@ -103,10 +109,9 @@ public class Dot : MonoBehaviour
         imageDot.transform.localScale = Vector3.one;
         mergeTargetDot = other;
 
-        float animTime = .2f;
         Tweener.AddTween(imageDot.transform, Tweener.Type.Position, transform.position, other.transform.position,
-            animTime, Tweener.InterpolationType.Smooth, Tweener.RepeatMode.Once, 0, OnMergeFlyAnimFinished);
-        Tweener.AddColorTween(imageDot.transform, Color.white, new Color(1,1,1,.25f), animTime);
+            ANIM_TIME_MERGE_FLY, Tweener.InterpolationType.Smooth, Tweener.RepeatMode.Once, 0, OnMergeFlyAnimFinished);
+        Tweener.AddColorTween(imageDot.transform, Color.white, new Color(1,1,1,.25f), ANIM_TIME_MERGE_FLY);
     }
 
     public Dot GetMergeTargetDot()
@@ -130,8 +135,8 @@ public class Dot : MonoBehaviour
     {
         Revive();
         Value = otherDot.value;
-        Tweener.AddTween(imageDot.transform, Tweener.Type.Position, otherDot.transform.position, transform.position, .2f,
-            Tweener.InterpolationType.EaseFrom, Tweener.RepeatMode.Once, 0, OnFallAnimFinished);
+        Tweener.AddTween(imageDot.transform, Tweener.Type.Position, otherDot.transform.position, transform.position,
+            ANIM_TIME_FALL, Tweener.InterpolationType.EaseFrom, Tweener.RepeatMode.Once, 0, OnFallAnimFinished);
         otherDot.Kill();
     }
 
@@ -169,10 +174,12 @@ public class Dot : MonoBehaviour
         eventFallAnimFinished.Fire(this);
         RectTransform imageRect = imageDot.GetComponent<RectTransform>();
         imageRect.pivot = new Vector2(.5f, 0f);
+        
+        float animTime = ANIM_TIME_FALL_BOUNCE / 2f;
         Vector3 scaleTo = new Vector3(1f, .7f, 1f);
-        Tweener.AddTween(imageRect, Tweener.Type.Scale, Vector3.one, scaleTo, .07f, Tweener.InterpolationType.EaseTo);
-        Tweener.AddTween(imageRect, Tweener.Type.Scale, scaleTo, Vector2.one, .07f,
-            Tweener.InterpolationType.EaseFrom, Tweener.RepeatMode.Once, .07f, OnBounceAnimFinished);
+        Tweener.AddTween(imageRect, Tweener.Type.Scale, Vector3.one, scaleTo, animTime, Tweener.InterpolationType.EaseTo);
+        Tweener.AddTween(imageRect, Tweener.Type.Scale, scaleTo, Vector2.one, animTime,
+            Tweener.InterpolationType.EaseFrom, Tweener.RepeatMode.Once, animTime, OnBounceAnimFinished);
     }
 
     void OnBounceAnimFinished(Tweener tweener)

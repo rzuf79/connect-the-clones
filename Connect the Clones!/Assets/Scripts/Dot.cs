@@ -6,8 +6,8 @@ using UnityEngine.UI;
 public class Dot : MonoBehaviour
 {
     public static readonly float MERGE_DURATION = 0.2f;
-    private const int MAX_MINOR_VALUE = 9;
-    private const string SUFFIXES = " KMBTABCDEFGHIJKLMNOPQRSTUVW";
+    private const int MAX_MINOR_VALUE = 10;
+    private const string SUFFIXES = " KMBTABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
     public event EventDelegate<Dot> eventPressed;
     public event EventDelegate<Dot> eventReentered;
@@ -22,16 +22,25 @@ public class Dot : MonoBehaviour
         get { return value; }
         set 
         {
-            this.value = value;
-            int minor = value % MAX_MINOR_VALUE;
-            int major = value / MAX_MINOR_VALUE;
-
-            imageDot.color = GetColor();
-            imageFrame.gameObject.SetActive(major % 2 != 0);
-            textValue.text = "" + Mathf.Pow(2, minor);
-            if (major > 0)
+            int maxValue = MAX_MINOR_VALUE * SUFFIXES.Length;
+            if (value >= maxValue)
             {
-                textValue.text += SUFFIXES[major];
+                this.value = maxValue;
+                textValue.text = "infinity";
+            }
+            else
+            {
+                this.value = value;
+                int minor = value % MAX_MINOR_VALUE;
+                int major = value / MAX_MINOR_VALUE;
+
+                imageDot.color = GetColor();
+                imageFrame.gameObject.SetActive(major % 2 != 0);
+                textValue.text = "" + Mathf.Pow(2, minor);
+                if (major > 0)
+                {
+                    textValue.text += SUFFIXES[major];
+                }
             }
         }
     }
@@ -43,6 +52,8 @@ public class Dot : MonoBehaviour
     [SerializeField] Image imageDot;
     [SerializeField] Image imageFrame;
     [SerializeField] TextMeshProUGUI textValue;
+
+    public bool debugButton = false;
 
     private bool pressed = false;
     private Dot mergeTargetDot = null;
@@ -66,6 +77,12 @@ public class Dot : MonoBehaviour
                 eventMergeFinished.Fire(this);
                 mergeTargetDot = null;
             }
+        }
+
+        if (debugButton)
+        {
+            debugButton = false;
+            Value ++;
         }
     }
 
@@ -93,11 +110,6 @@ public class Dot : MonoBehaviour
     public Color GetColor()
     {
         return valueColors[Value % MAX_MINOR_VALUE];
-    }
-
-    public bool IsMaxValue()
-    {
-        return Value >= SUFFIXES.Length * MAX_MINOR_VALUE;
     }
 
     public void OnPointerDown()

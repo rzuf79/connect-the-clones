@@ -109,9 +109,9 @@ public class Dot : MonoBehaviour
         imageDot.transform.localScale = Vector3.one;
         mergeTargetDot = other;
 
+        Tweener.AddColorTween(textValue.transform, Color.white, new Color(1,1,1,.25f), ANIM_TIME_MERGE_FLY);
         Tweener.AddTween(imageDot.transform, Tweener.Type.Position, transform.position, other.transform.position,
             ANIM_TIME_MERGE_FLY, Tweener.InterpolationType.Smooth, Tweener.RepeatMode.Once, 0, OnMergeFlyAnimFinished);
-        Tweener.AddColorTween(imageDot.transform, Color.white, new Color(1,1,1,.25f), ANIM_TIME_MERGE_FLY);
     }
 
     public Dot GetMergeTargetDot()
@@ -154,11 +154,11 @@ public class Dot : MonoBehaviour
         imageDot.gameObject.SetActive(true);
         imageDot.transform.position = transform.position;
         mergeTargetDot = null;
-        textValue.color = Color.white;
     }
 
     void OnMergeFlyAnimFinished(Tweener tweener)
     {
+        textValue.color = Color.white;
         eventMergeFinished.Fire(this);
         Kill();
         mergeTargetDot = null;

@@ -41,11 +41,11 @@ public class Tweener : MonoBehaviour
 
 		public TransformColorSetter(Transform targetTransform)
 		{
-			if(AssignReference<CanvasGroup>(targetTransform.GetComponent<CanvasGroup>(), canvasGroup)) return;
-			if(AssignReference<Renderer>(targetTransform.GetComponent<Renderer>(), renderer)) return;
-			if(AssignReference<UnityEngine.UI.Image>(targetTransform.GetComponent<UnityEngine.UI.Image>(), image)) return;
-			if(AssignReference<UnityEngine.UI.Text>(targetTransform.GetComponent<UnityEngine.UI.Text>(), text)) return;
-			if(AssignReference<TMPro.TextMeshProUGUI>(targetTransform.GetComponent<TMPro.TextMeshProUGUI>(), textMeshProUGUI)) return;
+			if(AssignReference<CanvasGroup>(targetTransform.GetComponent<CanvasGroup>(), out canvasGroup)) return;
+			if(AssignReference<Renderer>(targetTransform.GetComponent<Renderer>(), out renderer)) return;
+			if(AssignReference<UnityEngine.UI.Image>(targetTransform.GetComponent<UnityEngine.UI.Image>(), out image)) return;
+			if(AssignReference<UnityEngine.UI.Text>(targetTransform.GetComponent<UnityEngine.UI.Text>(), out text)) return;
+			if(AssignReference<TMPro.TextMeshProUGUI>(targetTransform.GetComponent<TMPro.TextMeshProUGUI>(), out textMeshProUGUI)) return;
 		}
 
 		public void SetColor(Color newColor)
@@ -67,13 +67,14 @@ public class Tweener : MonoBehaviour
 			return Color.white;
 		}
 
-		private bool AssignReference<T>(T component, T targetReference) where T : UnityEngine.Object
+		private bool AssignReference<T>(T component, out T targetReference) where T : UnityEngine.Object
 		{
 			if(component)
 			{
 				targetReference = component;
 				return true;
 			}
+			targetReference = null;
 			return false;
 		}
 	}
@@ -180,7 +181,6 @@ public class Tweener : MonoBehaviour
 			{
 				case RepeatMode.Once:
 				{
-					timer = lifetime;
 					onFinished?.Invoke(this);
 					Destroy(this);
 					return;

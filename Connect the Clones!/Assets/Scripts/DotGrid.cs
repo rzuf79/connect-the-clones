@@ -121,9 +121,22 @@ public class DotGrid : MonoBehaviour
             Color lineColor = dot.GetColor();
             lineRenderer.startColor = lineRenderer.endColor = lineColor;
         }
-        dotsChain.Add(dot);
+        AddDotToChain(dot);
         lineRenderer.positionCount ++;
         lineRenderer.SetPosition(lineRenderer.positionCount-1, dot.transform.localPosition);
+    }
+
+    void AddDotToChain(Dot dot)
+    {
+        dotsChain.Add(dot);
+        dot.eventKilled += OnDotKilled;
+    }
+
+    void RemoveDotFromChain(Dot dot)
+    {
+        dot.eventKilled -= OnDotKilled;
+        dotsChain.Remove(dot);
+
     }
 
     void OnDotReentered(Dot dot)
@@ -132,20 +145,15 @@ public class DotGrid : MonoBehaviour
         int cc = dotsChain.Count;
         if (dotsChain.IndexOf(dot) == cc - 2)
         {
-            dotsChain[cc-1].SetPressed(false);
-            dotsChain.RemoveAt(cc-1);
+            Dot removedDot = dotsChain[cc-1];
+            removedDot.SetPressed(false);
+            RemoveDotFromChain(removedDot);
             lineRenderer.positionCount --;
         }
     }
 
     void OnInputPointerReleased()
     {
-        for (int i = 0; i < dots.Length; ++i)
-        {
-            dots[i].SetPressed(false);
-        }
-        lineRenderer.positionCount = 0;
-
         if (dotsChain.Count > 1)
         {
             Dot target = dotsChain[^1];
@@ -158,7 +166,30 @@ public class DotGrid : MonoBehaviour
             dotsChain[0].eventMergeFinished += OnDotsMergeFlyFinished;
         }
 
-        dotsChain.Clear();
+        ClearDotsChain();
+    }
+
+    void ClearDotsChain()
+    {
+        for (int i = 0; i < dots.Length; ++i)
+        {
+            dots[i].SetPressed(false);
+        }
+        lineRenderer.positionCount = 0;
+        
+        for (int i = dotsChain.Count-1; i >= 0; --i)
+        {
+            RemoveDotFromChain(dotsChain[i]);
+        }
+    }
+
+    void OnDotKilled(Dot dot)
+    {
+        if (dotsChain.IndexOf(dot) != -1)
+        {
+            // A dot that was a part of the chain got killed. Prolly because it fell down the grid.
+            ClearDotsChain();
+        }
     }
 
     void OnDotsMergeFlyFinished(Dot dot)

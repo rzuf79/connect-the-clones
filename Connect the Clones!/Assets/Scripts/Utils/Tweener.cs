@@ -131,29 +131,7 @@ public class Tweener : MonoBehaviour
 
 		if(timer >= lifetime)
 		{
-			switch(repeatMode)
-			{
-				case RepeatMode.Once:
-				{
-					timer = lifetime;
-					onFinished?.Invoke(this);
-					Destroy(this);
-					return;
-				}
-				case RepeatMode.Loop:
-				{
-					timer = 0.0f;
-					onFinished?.Invoke(this);
-					break;
-				}
-				case RepeatMode.Bounce:
-				{
-					timer = 0.0f;
-					direction = -direction;
-					onFinished?.Invoke(this);
-					break;
-				}
-			}
+			timer = lifetime;
 		}
 
 		float v = timer / lifetime;
@@ -193,6 +171,33 @@ public class Tweener : MonoBehaviour
 				Color newColor = Color.Lerp(colorFrom, colorTo, v);
 				colorSetter.SetColor(newColor);
 				break;
+			}
+		}
+
+		if(timer >= lifetime)
+		{
+			switch(repeatMode)
+			{
+				case RepeatMode.Once:
+				{
+					timer = lifetime;
+					onFinished?.Invoke(this);
+					Destroy(this);
+					return;
+				}
+				case RepeatMode.Loop:
+				{
+					timer = 0.0f;
+					onFinished?.Invoke(this);
+					break;
+				}
+				case RepeatMode.Bounce:
+				{
+					timer = 0.0f;
+					direction = -direction;
+					onFinished?.Invoke(this);
+					break;
+				}
 			}
 		}
 	}

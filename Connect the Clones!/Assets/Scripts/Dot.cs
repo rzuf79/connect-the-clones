@@ -11,6 +11,7 @@ public class Dot : MonoBehaviour
 
     public event EventDelegate<Dot> eventPressed;
     public event EventDelegate<Dot> eventReentered;
+    public event EventDelegate<Dot> eventKilled;
     public event EventDelegate<Dot> eventMergeFinished;
     public event EventDelegate<Dot> eventSpawnAnimFinished;
     public event EventDelegate<Dot> eventFallAnimFinished;
@@ -138,6 +139,7 @@ public class Dot : MonoBehaviour
     {
         dead = true;
         imageDot.gameObject.SetActive(false);
+        eventKilled.Fire(this);
     }
 
     public void DuplicateAndAnimateFall(Dot otherDot)

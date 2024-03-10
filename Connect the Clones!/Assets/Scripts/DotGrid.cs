@@ -8,7 +8,7 @@ public class DotGrid : MonoBehaviour
 
     private Dot[] dots;
     private List<Dot> dotsChain = new List<Dot>();
-    private Dot mergeTargetDot = null; // Dot that is currently merget into
+    private List<Dot> mergeTargetDots = new List<Dot>(); // Dots that are currently merget into
     private LineRenderer lineRenderer;
 
     void Start()
@@ -96,7 +96,7 @@ public class DotGrid : MonoBehaviour
 
     void OnDotPressed(Dot dot)
     {
-        if (dot == mergeTargetDot)
+        if (mergeTargetDots.IndexOf(dot) != -1)
         {
             return;
         }
@@ -148,11 +148,12 @@ public class DotGrid : MonoBehaviour
 
         if (dotsChain.Count > 1)
         {
-            mergeTargetDot = dotsChain[^1];
-            mergeTargetDot.transform.SetAsLastSibling();
+            Dot target = dotsChain[^1];
+            mergeTargetDots.Add(target);
+            target.transform.SetAsLastSibling();
             for (int i = 0; i < dotsChain.Count - 1; ++i)
             {
-                dotsChain[i].MergeWith(mergeTargetDot);
+                dotsChain[i].MergeWith(target);
             }
             dotsChain[0].eventMergeFinished += OnDotsMergeFlyFinished;
         }
@@ -162,16 +163,24 @@ public class DotGrid : MonoBehaviour
 
     void OnDotsMergeFlyFinished(Dot dot)
     {
-        dot.eventMergeFinished -= OnDotsMergeFlyFinished;
-        mergeTargetDot.Value ++;
-        mergeTargetDot.AnimateIncrement();
-        mergeTargetDot.eventSpawnAnimFinished += OnMergedDotSpawnAnimFinished;
+        Dot target = dot.GetMergeTargetDot();
 
-        mergeTargetDot = null;
+        dot.eventMergeFinished -= OnDotsMergeFlyFinished;
+        target.Value ++;
+        target.AnimateIncrement();
+        target.eventSpawnAnimFinished += OnMergedDotSpawnAnimFinished;
+
+        mergeTargetDots.Remove(target);
     }
 
     void OnMergedDotSpawnAnimFinished(Dot dot)
     {
+        if (mergeTargetDots.Count > 0)
+        {
+            // wait for the remaining merge anims to finish
+            return;
+        }
+
         dot.eventSpawnAnimFinished -= OnMergedDotSpawnAnimFinished;
 
         List<Dot> fallingDots = new List<Dot>();

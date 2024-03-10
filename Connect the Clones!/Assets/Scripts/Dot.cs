@@ -61,8 +61,9 @@ public class Dot : MonoBehaviour
             if (mergeProgress >= 1f)
             {
                 mergeProgress = 1f;
-                dead = true;
+                Kill();
                 eventMergeFinished.Fire(this);
+                mergeTargetDot = null;
             }
         }
     }
@@ -123,6 +124,11 @@ public class Dot : MonoBehaviour
         mergeTargetDot = other;
     }
 
+    public Dot GetMergeTargetDot()
+    {
+        return mergeTargetDot;
+    }
+
     public bool IsDead()
     {
         return dead;
@@ -140,7 +146,7 @@ public class Dot : MonoBehaviour
         Value = otherDot.value;
         Tweener.RemoveTweensFromTransform(imageDot.transform);
         Tweener.AddTween(imageDot.transform, Tweener.Type.Position, otherDot.transform.position, transform.position, .2f,
-            Tweener.InterpolationType.Linear, Tweener.RepeatMode.Once, 0, OnFallAnimFinished);
+            Tweener.InterpolationType.EaseFrom, Tweener.RepeatMode.Once, 0, OnFallAnimFinished);
         otherDot.Kill();
     }
 
@@ -169,13 +175,13 @@ public class Dot : MonoBehaviour
     void OnFallAnimFinished(Tweener tweener)
     {
         eventFallAnimFinished.Fire(this);
-        RectTransform rect = imageDot.GetComponent<RectTransform>();
-        rect.pivot = new Vector2(.5f, 0f);
+        RectTransform imageRect = imageDot.GetComponent<RectTransform>();
+        imageRect.pivot = new Vector2(.5f, 0f);
         Tweener.RemoveTweensFromTransform(imageDot.transform);
         Vector3 scaleTo = new Vector3(1f, .7f, 1f);
-        Tweener.AddTween(rect, Tweener.Type.Scale, Vector3.one, scaleTo, .1f, Tweener.InterpolationType.EaseFrom);
-        Tweener.AddTween(rect, Tweener.Type.Scale, scaleTo, Vector2.one, .1f,
-            Tweener.InterpolationType.EaseTo, Tweener.RepeatMode.Once, .1f, OnBounceAnimFinished);
+        Tweener.AddTween(imageRect, Tweener.Type.Scale, Vector3.one, scaleTo, .07f, Tweener.InterpolationType.EaseTo);
+        Tweener.AddTween(imageRect, Tweener.Type.Scale, scaleTo, Vector2.one, .07f,
+            Tweener.InterpolationType.EaseFrom, Tweener.RepeatMode.Once, .07f, OnBounceAnimFinished);
     }
 
     void OnBounceAnimFinished(Tweener tweener)

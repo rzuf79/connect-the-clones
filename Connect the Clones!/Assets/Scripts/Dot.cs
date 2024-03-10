@@ -1,5 +1,4 @@
 using TMPro;
-using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -53,38 +52,9 @@ public class Dot : MonoBehaviour
     [SerializeField] Image imageFrame;
     [SerializeField] TextMeshProUGUI textValue;
 
-    public bool debugButton = false;
-
     private bool pressed = false;
     private Dot mergeTargetDot = null;
-    private float mergeProgress = 0f;
     private bool dead;
-
-
-    void Update()
-    {
-        if (mergeTargetDot != null && mergeProgress < 1f)
-        {
-            mergeProgress += Time.deltaTime / MERGE_DURATION;
-            float v = mergeProgress;
-            v = v * v * (3-2*v);
-            imageDot.transform.position = Vector3.Lerp(transform.position, mergeTargetDot.transform.position, v);
-            textValue.color = Color.Lerp(Color.white, new Color(1,1,1,.25f), v);
-            if (mergeProgress >= 1f)
-            {
-                mergeProgress = 1f;
-                Kill();
-                eventMergeFinished.Fire(this);
-                mergeTargetDot = null;
-            }
-        }
-
-        if (debugButton)
-        {
-            debugButton = false;
-            Value ++;
-        }
-    }
 
     public void SetPressed(bool value)
     {
@@ -131,8 +101,12 @@ public class Dot : MonoBehaviour
     public void MergeWith(Dot other)
     {
         imageDot.transform.localScale = Vector3.one;
-        mergeProgress = 0f;
         mergeTargetDot = other;
+
+        float animTime = .2f;
+        Tweener.AddTween(imageDot.transform, Tweener.Type.Position, transform.position, other.transform.position,
+            animTime, Tweener.InterpolationType.Smooth, Tweener.RepeatMode.Once, 0, OnMergeFlyAnimFinished);
+        Tweener.AddColorTween(imageDot.transform, Color.white, new Color(1,1,1,.25f), animTime);
     }
 
     public Dot GetMergeTargetDot()
@@ -176,6 +150,13 @@ public class Dot : MonoBehaviour
         imageDot.transform.position = transform.position;
         mergeTargetDot = null;
         textValue.color = Color.white;
+    }
+
+    void OnMergeFlyAnimFinished(Tweener tweener)
+    {
+        eventMergeFinished.Fire(this);
+        Kill();
+        mergeTargetDot = null;
     }
 
     void OnIncrementAnimFinished(Tweener tweener)

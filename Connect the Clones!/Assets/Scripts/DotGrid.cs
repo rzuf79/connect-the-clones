@@ -6,6 +6,8 @@ public class DotGrid : MonoBehaviour
     [SerializeField] GameObject dotPrefab;
     [SerializeField] float dotsSpacing = 45f;
 
+    public bool debugButton = false;
+
     private Dot[] dots;
     private List<Dot> dotsChain = new List<Dot>();
     private LineRenderer lineRenderer;
@@ -21,7 +23,7 @@ public class DotGrid : MonoBehaviour
             for (int i = 0; i < gridSize * gridSize; ++i)
             {
                 Dot newDot = GameObject.Instantiate(dotPrefab, transform).GetComponent<Dot>();
-                newDot.gridPosition.Set(i / gridSize, i % gridSize);
+                newDot.gridPosition.Set(i % gridSize, i / gridSize);
                 newDot.eventPressed += OnDotPressed;
                 newDot.eventReentered += OnDotReentered;
                 dots[i] = newDot;
@@ -31,6 +33,15 @@ public class DotGrid : MonoBehaviour
         }
 
         InputManager.instance.eventPointerReleased += OnInputPointerReleased;
+    }
+
+    void Update()
+    {
+        if (debugButton)
+        {
+            debugButton = false;
+            RandomizeGrid(1, 200);
+        }
     }
 
     void PositionDotsOnGrid()
@@ -52,10 +63,43 @@ public class DotGrid : MonoBehaviour
 
     void RandomizeGrid(int minValue, int maxValue)
     {
+        int tries = 0;
+        do
+        {
+            for (int i = 0; i < dots.Length; ++i)
+            {
+                dots[i].Value = Random.Range(minValue, maxValue+1);
+            }
+            tries ++;
+        } while(IsBoardStuck());
+    }
+
+    bool IsBoardStuck()
+    {
         for (int i = 0; i < dots.Length; ++i)
         {
-            dots[i].Value = Random.Range(minValue, maxValue+1);
+            Vector2Int gridPos = dots[i].gridPosition;
+            int currentValue = dots[i].Value;
+            for(int r = gridPos.y - 1; r <= gridPos.y + 1; ++r)
+            {
+                for(int c = gridPos.x - 1; c <= gridPos.x + 1; ++c)
+                {
+                    if ((r == gridPos.y && c == gridPos.x) 
+                        || r < 0 || r >= Constants.GRID_SIZE 
+                        || c < 0 || c >= Constants.GRID_SIZE)
+                    {
+                        continue;
+                    }
+
+                    int neighbourIndex = r * Constants.GRID_SIZE + c;
+                    if (dots[neighbourIndex].Value == currentValue)
+                    {
+                        return false;
+                    }
+                }
+            }
         }
+        return true;
     }
 
     void OnDotPressed(Dot dot)

@@ -1,8 +1,5 @@
-using System.Collections;
-using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
-using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 public class Dot : MonoBehaviour
@@ -23,6 +20,7 @@ public class Dot : MonoBehaviour
             int major = value / MAX_MINOR_VALUE;
 
             imageDot.color = GetColor();
+            imageFrame.gameObject.SetActive(major % 2 != 0);
             textValue.text = "" + Mathf.Pow(2, minor);
             if (major > 0)
             {

@@ -19,6 +19,7 @@ public class Dot : MonoBehaviour
     public event EventDelegate<Dot> eventPressed;
     public event EventDelegate<Dot> eventReentered;
     public event EventDelegate<Dot> eventMergeFinished;
+    public event EventDelegate<Dot> eventSpawnAnimFinished;
 
     private int value;
     public int Value
@@ -59,7 +60,10 @@ public class Dot : MonoBehaviour
         if (mergeTargetDot != null && mergeProgress < 1f)
         {
             mergeProgress += Time.deltaTime / MERGE_DURATION;
-            imageDot.transform.position = Vector3.Lerp(transform.position, mergeTargetDot.transform.position, mergeProgress);
+            float v = mergeProgress;
+            v = v * v * (3-2*v);
+            imageDot.transform.position = Vector3.Lerp(transform.position, mergeTargetDot.transform.position, v);
+            textValue.color = Color.Lerp(Color.white, new Color(1,1,1,.25f), v);
             if (mergeProgress >= 1f)
             {
                 mergeProgress = 1f;
@@ -86,8 +90,20 @@ public class Dot : MonoBehaviour
     public void RespawnWithValue(int value)
     {
         mergeTargetDot = null;
+        textValue.color = Color.white;
         Value = value;
         imageDot.transform.position = transform.position;
+
+        Tweener.RemoveTweensFromTransform(imageDot.transform);
+        Tweener.AddTween(imageDot.transform, Tweener.Type.Scale, Vector3.zero, Vector3.one, .2f,
+            Tweener.InterpolationType.EaseFrom, Tweener.RepeatMode.Once, 0);
+    }
+
+    public void AnimateIncrement()
+    {
+        Tweener.RemoveTweensFromTransform(imageDot.transform);
+        Tweener.AddTween(imageDot.transform, Tweener.Type.Scale, Vector3.one * 1.2f, Vector3.one, .2f,
+            Tweener.InterpolationType.Smooth, Tweener.RepeatMode.Once, 0, OnIncrementAnimFinished);
     }
 
     public Color GetColor()
@@ -133,6 +149,11 @@ public class Dot : MonoBehaviour
         {
             OnPointerDown();
         }
+    }
+
+    void OnIncrementAnimFinished(Tweener tween)
+    {
+        eventSpawnAnimFinished.Fire(this);
     }
 
 }

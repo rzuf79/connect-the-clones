@@ -163,16 +163,26 @@ public class DotGrid : MonoBehaviour
             {
                 dotsChain[i].MergeWith(mergeTargetDot);
             }
-            dotsChain[0].eventMergeFinished += OnDotsMergeFinished;
+            dotsChain[0].eventMergeFinished += OnDotsMergeFlyFinished;
         }
 
         dotsChain.Clear();
     }
 
-    void OnDotsMergeFinished(Dot dot)
+    void OnDotsMergeFlyFinished(Dot dot)
     {
-        dot.eventMergeFinished -= OnDotsMergeFinished;
+        dot.eventMergeFinished -= OnDotsMergeFlyFinished;
         mergeTargetDot.Value ++;
+        mergeTargetDot.AnimateIncrement();
+        mergeTargetDot.eventSpawnAnimFinished += OnMergedDotSpawnAnimFinished;
+
+        mergeTargetDot = null;
+    }
+
+    void OnMergedDotSpawnAnimFinished(Dot dot)
+    {
+        dot.eventSpawnAnimFinished -= OnMergedDotSpawnAnimFinished;
+        
         for (int i = 0; i < dots.Length; ++i)
         {
             if (dots[i].IsMerged())
@@ -180,7 +190,5 @@ public class DotGrid : MonoBehaviour
                 dots[i].RespawnWithValue(Random.Range(1, 4));
             }
         }
-
-        mergeTargetDot = null;
     }
 }

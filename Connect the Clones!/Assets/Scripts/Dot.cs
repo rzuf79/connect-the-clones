@@ -9,17 +9,11 @@ public class Dot : MonoBehaviour
     private const int MAX_MINOR_VALUE = 9;
     private const string SUFFIXES = " KMBTABCDEFGHIJKLMNOPQRSTUVW";
 
-    public enum State
-    {
-        Idle,
-        Merging,
-        Falling,
-    }
-
     public event EventDelegate<Dot> eventPressed;
     public event EventDelegate<Dot> eventReentered;
     public event EventDelegate<Dot> eventMergeFinished;
     public event EventDelegate<Dot> eventSpawnAnimFinished;
+    public event EventDelegate<Dot> eventFallAnimFinished;
 
     private int value;
     public int Value
@@ -50,9 +44,9 @@ public class Dot : MonoBehaviour
     [SerializeField] TextMeshProUGUI textValue;
 
     private bool pressed = false;
-    private State state = State.Idle;
     private Dot mergeTargetDot = null;
     private float mergeProgress = 0f;
+    private bool dead;
 
 
     void Update()
@@ -67,32 +61,22 @@ public class Dot : MonoBehaviour
             if (mergeProgress >= 1f)
             {
                 mergeProgress = 1f;
+                dead = true;
                 eventMergeFinished.Fire(this);
             }
-            return;
-        }
-
-        if (pressed)
-        {
-            imageDot.transform.localScale = Vector2.one * 1.1f;
-        }
-        else 
-        {
-            imageDot.transform.localScale = Vector2.one;
         }
     }
 
     public void SetPressed(bool value)
     {
         pressed = value;
+        imageDot.transform.localScale = pressed ? Vector2.one * 1.1f : Vector2.one;
     }
 
     public void RespawnWithValue(int value)
     {
-        mergeTargetDot = null;
-        textValue.color = Color.white;
+        Revive();
         Value = value;
-        imageDot.transform.position = transform.position;
 
         Tweener.RemoveTweensFromTransform(imageDot.transform);
         Tweener.AddTween(imageDot.transform, Tweener.Type.Scale, Vector3.zero, Vector3.one, .2f,
@@ -118,7 +102,7 @@ public class Dot : MonoBehaviour
 
     public void OnPointerDown()
     {
-        if (state == State.Merging || IsMerged())
+        if (mergeTargetDot != null)
         {
             return;
         }
@@ -134,13 +118,30 @@ public class Dot : MonoBehaviour
 
     public void MergeWith(Dot other)
     {
+        imageDot.transform.localScale = Vector3.one;
         mergeProgress = 0f;
         mergeTargetDot = other;
     }
 
-    public bool IsMerged()
+    public bool IsDead()
     {
-        return mergeTargetDot != null;
+        return dead;
+    }
+
+    public void Kill()
+    {
+        dead = true;
+        imageDot.gameObject.SetActive(false);
+    }
+
+    public void DuplicateAndAnimateFall(Dot otherDot)
+    {
+        Revive();
+        Value = otherDot.value;
+        Tweener.RemoveTweensFromTransform(imageDot.transform);
+        Tweener.AddTween(imageDot.transform, Tweener.Type.Position, otherDot.transform.position, transform.position, .2f,
+            Tweener.InterpolationType.Linear, Tweener.RepeatMode.Once, 0, OnFallAnimFinished);
+        otherDot.Kill();
     }
 
     public void OnPointerEntered()
@@ -151,9 +152,36 @@ public class Dot : MonoBehaviour
         }
     }
 
-    void OnIncrementAnimFinished(Tweener tween)
+    void Revive()
+    {
+        dead = false;
+        imageDot.gameObject.SetActive(true);
+        imageDot.transform.position = transform.position;
+        mergeTargetDot = null;
+        textValue.color = Color.white;
+    }
+
+    void OnIncrementAnimFinished(Tweener tweener)
     {
         eventSpawnAnimFinished.Fire(this);
+    }
+
+    void OnFallAnimFinished(Tweener tweener)
+    {
+        eventFallAnimFinished.Fire(this);
+        RectTransform rect = imageDot.GetComponent<RectTransform>();
+        rect.pivot = new Vector2(.5f, 0f);
+        Tweener.RemoveTweensFromTransform(imageDot.transform);
+        Vector3 scaleTo = new Vector3(1f, .7f, 1f);
+        Tweener.AddTween(rect, Tweener.Type.Scale, Vector3.one, scaleTo, .1f, Tweener.InterpolationType.EaseFrom);
+        Tweener.AddTween(rect, Tweener.Type.Scale, scaleTo, Vector2.one, .1f,
+            Tweener.InterpolationType.EaseTo, Tweener.RepeatMode.Once, .1f, OnBounceAnimFinished);
+    }
+
+    void OnBounceAnimFinished(Tweener tweener)
+    {
+        RectTransform rect = imageDot.GetComponent<RectTransform>();
+        rect.pivot = new Vector2(.5f, .5f);
     }
 
 }

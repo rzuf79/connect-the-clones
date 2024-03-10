@@ -6,8 +6,6 @@ public class DotGrid : MonoBehaviour
     [SerializeField] GameObject dotPrefab;
     [SerializeField] float dotsSpacing = 45f;
 
-    public bool debugButton = false;
-
     private Dot[] dots;
     private List<Dot> dotsChain = new List<Dot>();
     private Dot mergeTargetDot = null; // Dot that is currently merget into
@@ -34,15 +32,6 @@ public class DotGrid : MonoBehaviour
         }
 
         InputManager.instance.eventPointerReleased += OnInputPointerReleased;
-    }
-
-    void Update()
-    {
-        if (debugButton)
-        {
-            debugButton = false;
-            RandomizeGrid(1, 200);
-        }
     }
 
     void PositionDotsOnGrid()
@@ -77,10 +66,12 @@ public class DotGrid : MonoBehaviour
 
     bool IsBoardStuck()
     {
-        for (int i = 0; i < dots.Length; ++i)
+        Dot[] aliveDots = System.Array.FindAll(dots, dot => !dot.IsDead());
+
+        for (int i = 0; i < aliveDots.Length; ++i)
         {
-            Vector2Int gridPos = dots[i].gridPosition;
-            int currentValue = dots[i].Value;
+            Vector2Int gridPos = aliveDots[i].gridPosition;
+            int currentValue = aliveDots[i].Value;
             for(int r = gridPos.y - 1; r <= gridPos.y + 1; ++r)
             {
                 for(int c = gridPos.x - 1; c <= gridPos.x + 1; ++c)
@@ -93,7 +84,7 @@ public class DotGrid : MonoBehaviour
                     }
 
                     int neighbourIndex = r * Constants.GRID_SIZE + c;
-                    if (dots[neighbourIndex].Value == currentValue)
+                    if (aliveDots[neighbourIndex].Value == currentValue)
                     {
                         return false;
                     }
@@ -182,10 +173,45 @@ public class DotGrid : MonoBehaviour
     void OnMergedDotSpawnAnimFinished(Dot dot)
     {
         dot.eventSpawnAnimFinished -= OnMergedDotSpawnAnimFinished;
-        
+
+        List<Dot> fallingDots = new List<Dot>();
+        for (int i = dots.Length - 1; i >= 0; --i)
+        {
+            if (dots[i].IsDead())
+            {
+                for (int y = i; y >= 0; y -= Constants.GRID_SIZE)
+                {
+                    if (!dots[y].IsDead())
+                    {
+                        dots[i].DuplicateAndAnimateFall(dots[y]);
+                        fallingDots.Add(dots[i]);
+                        break;
+                    }
+                }
+            }
+        }
+
+        if (fallingDots.Count == 0)
+        {
+            RespawnDeadDots();
+        }
+        else
+        {
+            fallingDots[0].eventFallAnimFinished += OnDotFallAnimFinished;
+        }
+    }
+
+    void OnDotFallAnimFinished(Dot dot)
+    {
+        dot.eventFallAnimFinished -= OnDotFallAnimFinished;
+        RespawnDeadDots();
+    }
+
+    void RespawnDeadDots()
+    {
         for (int i = 0; i < dots.Length; ++i)
         {
-            if (dots[i].IsMerged())
+            if (dots[i].IsDead())
             {
                 dots[i].RespawnWithValue(Random.Range(1, 4));
             }

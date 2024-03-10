@@ -10,6 +10,7 @@ public class DotGrid : MonoBehaviour
 
     private Dot[] dots;
     private List<Dot> dotsChain = new List<Dot>();
+    private Dot mergeTargetDot = null; // Dot that is currently merget into
     private LineRenderer lineRenderer;
 
     void Start()
@@ -104,6 +105,11 @@ public class DotGrid : MonoBehaviour
 
     void OnDotPressed(Dot dot)
     {
+        if (dot == mergeTargetDot)
+        {
+            return;
+        }
+
         if (dotsChain.Count > 0)
         {
             Dot last = dotsChain[^1];
@@ -148,6 +154,33 @@ public class DotGrid : MonoBehaviour
             dots[i].SetPressed(false);
         }
         lineRenderer.positionCount = 0;
+
+        if (dotsChain.Count > 1)
+        {
+            mergeTargetDot = dotsChain[^1];
+            mergeTargetDot.transform.SetAsLastSibling();
+            for (int i = 0; i < dotsChain.Count - 1; ++i)
+            {
+                dotsChain[i].MergeWith(mergeTargetDot);
+            }
+            dotsChain[0].eventMergeFinished += OnDotsMergeFinished;
+        }
+
         dotsChain.Clear();
+    }
+
+    void OnDotsMergeFinished(Dot dot)
+    {
+        dot.eventMergeFinished -= OnDotsMergeFinished;
+        mergeTargetDot.Value ++;
+        for (int i = 0; i < dots.Length; ++i)
+        {
+            if (dots[i].IsMerged())
+            {
+                dots[i].RespawnWithValue(Random.Range(1, 4));
+            }
+        }
+
+        mergeTargetDot = null;
     }
 }

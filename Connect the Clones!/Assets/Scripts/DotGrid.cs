@@ -176,7 +176,7 @@ public class DotGrid : MonoBehaviour
             dots[i].SetPressed(false);
         }
         lineRenderer.positionCount = 0;
-        
+
         for (int i = dotsChain.Count-1; i >= 0; --i)
         {
             RemoveDotFromChain(dotsChain[i]);
@@ -249,11 +249,18 @@ public class DotGrid : MonoBehaviour
 
     void RespawnDeadDots()
     {
+        int maxSpawnValue = Constants.MIN_SPAWN_RANGE;
+        for (int i = 0; i < dots.Length; ++i)
+        {
+            int currentValue = (int)Mathf.Ceil((float)dots[i].Value * Constants.SPAWN_RANGE_FORMULA);
+            maxSpawnValue = Mathf.Max(maxSpawnValue, currentValue);
+        }
+
         for (int i = 0; i < dots.Length; ++i)
         {
             if (dots[i].IsDead())
             {
-                dots[i].RespawnWithValue(Random.Range(1, 4));
+                dots[i].RespawnWithValue(Random.Range(1, maxSpawnValue));
             }
         }
     }

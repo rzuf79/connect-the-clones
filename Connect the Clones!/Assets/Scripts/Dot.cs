@@ -80,14 +80,12 @@ public class Dot : MonoBehaviour
         Revive();
         Value = value;
 
-        Tweener.RemoveTweensFromTransform(imageDot.transform);
         Tweener.AddTween(imageDot.transform, Tweener.Type.Scale, Vector3.zero, Vector3.one, .2f,
             Tweener.InterpolationType.EaseFrom, Tweener.RepeatMode.Once, 0);
     }
 
     public void AnimateIncrement()
     {
-        Tweener.RemoveTweensFromTransform(imageDot.transform);
         Tweener.AddTween(imageDot.transform, Tweener.Type.Scale, Vector3.one * 1.2f, Vector3.one, .2f,
             Tweener.InterpolationType.Smooth, Tweener.RepeatMode.Once, 0, OnIncrementAnimFinished);
     }
@@ -146,7 +144,6 @@ public class Dot : MonoBehaviour
     {
         Revive();
         Value = otherDot.value;
-        Tweener.RemoveTweensFromTransform(imageDot.transform);
         Tweener.AddTween(imageDot.transform, Tweener.Type.Position, otherDot.transform.position, transform.position, .2f,
             Tweener.InterpolationType.EaseFrom, Tweener.RepeatMode.Once, 0, OnFallAnimFinished);
         otherDot.Kill();
@@ -179,7 +176,6 @@ public class Dot : MonoBehaviour
         eventFallAnimFinished.Fire(this);
         RectTransform imageRect = imageDot.GetComponent<RectTransform>();
         imageRect.pivot = new Vector2(.5f, 0f);
-        Tweener.RemoveTweensFromTransform(imageDot.transform);
         Vector3 scaleTo = new Vector3(1f, .7f, 1f);
         Tweener.AddTween(imageRect, Tweener.Type.Scale, Vector3.one, scaleTo, .07f, Tweener.InterpolationType.EaseTo);
         Tweener.AddTween(imageRect, Tweener.Type.Scale, scaleTo, Vector2.one, .07f,

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 public class DotGrid : MonoBehaviour
@@ -64,30 +65,47 @@ public class DotGrid : MonoBehaviour
         } while(IsBoardStuck());
     }
 
+    List<Dot> GetDotNeighbours(Dot dot)
+    {
+        List<Dot> dotsHood = new List<Dot>();
+        Vector2Int gridPos = dot.gridPosition;
+
+        for(int r = gridPos.y - 1; r <= gridPos.y + 1; ++r)
+        {
+            for(int c = gridPos.x - 1; c <= gridPos.x + 1; ++c)
+            {
+                if ((r == gridPos.y && c == gridPos.x) 
+                    || r < 0 || r >= Constants.GRID_SIZE 
+                    || c < 0 || c >= Constants.GRID_SIZE)
+                {
+                    continue;
+                }
+
+                int neighbourIndex = r * Constants.GRID_SIZE + c;
+                dotsHood.Add(dots[neighbourIndex]);
+            }
+        }
+        
+        return dotsHood;
+    }
+
     bool IsBoardStuck()
     {
         Dot[] aliveDots = System.Array.FindAll(dots, dot => !dot.IsDead());
 
-        for (int i = 0; i < aliveDots.Length; ++i)
+        for (int i = 0; i < dots.Length; ++i)
         {
-            Vector2Int gridPos = aliveDots[i].gridPosition;
-            int currentValue = aliveDots[i].Value;
-            for(int r = gridPos.y - 1; r <= gridPos.y + 1; ++r)
+            if (dots[i].IsDead())
             {
-                for(int c = gridPos.x - 1; c <= gridPos.x + 1; ++c)
-                {
-                    if ((r == gridPos.y && c == gridPos.x) 
-                        || r < 0 || r >= Constants.GRID_SIZE 
-                        || c < 0 || c >= Constants.GRID_SIZE)
-                    {
-                        continue;
-                    }
+                continue;
+            }
 
-                    int neighbourIndex = r * Constants.GRID_SIZE + c;
-                    if (aliveDots[neighbourIndex].Value == currentValue)
-                    {
-                        return false;
-                    }
+            List<Dot> neighbours = GetDotNeighbours(dots[i]);
+            for (int j = 0; j < neighbours.Count; ++j)
+            {
+                if (!neighbours[j].IsDead() && neighbours[j].Value == dots[i].Value)
+                {
+                    return false;
                 }
             }
         }
@@ -252,16 +270,27 @@ public class DotGrid : MonoBehaviour
         int maxSpawnValue = Constants.MIN_SPAWN_RANGE;
         for (int i = 0; i < dots.Length; ++i)
         {
-            int currentValue = (int)Mathf.Ceil((float)dots[i].Value * Constants.SPAWN_RANGE_FORMULA);
+            int currentValue = (int)Mathf.Ceil((float)dots[i].Value * Constants.SPAWN_RANGE_RATIO);
             maxSpawnValue = Mathf.Max(maxSpawnValue, currentValue);
         }
 
+        List<Dot> respawnedDots = new List<Dot>();
         for (int i = 0; i < dots.Length; ++i)
         {
             if (dots[i].IsDead())
             {
                 dots[i].RespawnWithValue(Random.Range(1, maxSpawnValue));
+                respawnedDots.Add(dots[i]);
             }
+        }
+        if (respawnedDots.Count > 0 && IsBoardStuck())
+        {
+            /** there's no solvable combination on board anymore
+                take a random dot and change its value to something that
+                can be solved   */
+            Dot randomDot = Utils.GetRandomElement(respawnedDots);
+            Dot randomNeighbour = Utils.GetRandomElement(GetDotNeighbours(randomDot));
+            randomDot.Value = randomNeighbour.Value;
         }
     }
 }

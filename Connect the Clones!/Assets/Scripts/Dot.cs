@@ -88,22 +88,6 @@ public class Dot : MonoBehaviour
         return valueColors[Value % MAX_MINOR_VALUE];
     }
 
-    public void OnPointerDown()
-    {
-        if (mergeTargetDot != null)
-        {
-            return;
-        }
-        if (pressed)
-        {
-            eventReentered.Fire(this);
-        }
-        else
-        {
-            eventPressed.Fire(this);
-        }
-    }
-
     public void MergeWith(Dot other)
     {
         imageDot.transform.localScale = Vector3.one;
@@ -145,6 +129,22 @@ public class Dot : MonoBehaviour
         if (InputManager.instance.pointerDown)
         {
             OnPointerDown();
+        }
+    }
+
+    public void OnPointerDown()
+    {
+        if (mergeTargetDot != null)
+        {
+            return;
+        }
+        if (pressed)
+        {
+            eventReentered.Fire(this);
+        }
+        else
+        {
+            eventPressed.Fire(this);
         }
     }
 

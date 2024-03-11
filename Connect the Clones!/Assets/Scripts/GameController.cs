@@ -9,18 +9,13 @@ public class GameController : MonoBehaviour
     {
         Application.targetFrameRate = 60;
 
-        grid.eventDotPressed += OnDotPressed;
-        grid.eventDotsReleased += OnDotsReleased;
+        grid.eventDotsChainUpdated += OnDotsChainUpdated;
     }
 
-    void OnDotPressed(Dot dot)
+    void OnDotsChainUpdated(Dot dot, int dotsCount)
     {
-        previewDot.Value = dot.Value;
-        previewDot.gameObject.SetActive(true);
+        previewDot.Value = dotsCount > 1 ? dot.Value + 1 : dot.Value;
+        previewDot.gameObject.SetActive(dotsCount > 0);
     }
 
-    void OnDotsReleased()
-    {
-        previewDot.gameObject.SetActive(false);
-    }
 }

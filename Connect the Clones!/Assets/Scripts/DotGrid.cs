@@ -3,8 +3,7 @@ using UnityEngine;
 
 public class DotGrid : MonoBehaviour
 {
-    public EventDelegate<Dot> eventDotPressed;
-    public EventDelegate eventDotsReleased; // fired when no dots are pressed anymore
+    public EventDelegate<Dot, int> eventDotsChainUpdated;
 
     [SerializeField] GameObject dotPrefab;
     [SerializeField] float dotsSpacing = 45f;
@@ -139,7 +138,6 @@ public class DotGrid : MonoBehaviour
         }
 
         dot.SetPressed(true);
-        eventDotPressed.Fire(dot);
         if (dotsChain.Count == 0)
         {
             Color lineColor = dot.GetColor();
@@ -154,13 +152,14 @@ public class DotGrid : MonoBehaviour
     {
         dotsChain.Add(dot);
         dot.eventKilled += OnDotKilled;
+        eventDotsChainUpdated.Fire(dot, dotsChain.Count);
     }
 
     void RemoveDotFromChain(Dot dot)
     {
         dot.eventKilled -= OnDotKilled;
         dotsChain.Remove(dot);
-
+        eventDotsChainUpdated.Fire(dot, dotsChain.Count);
     }
 
     void OnDotReentered(Dot dot)
@@ -205,8 +204,6 @@ public class DotGrid : MonoBehaviour
         {
             RemoveDotFromChain(dotsChain[i]);
         }
-
-        eventDotsReleased.Fire();
     }
 
     void OnDotKilled(Dot dot)

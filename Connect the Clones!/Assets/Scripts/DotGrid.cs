@@ -1,9 +1,11 @@
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 
 public class DotGrid : MonoBehaviour
 {
+    public EventDelegate<Dot> eventDotPressed;
+    public EventDelegate eventDotsReleased; // fired when no dots are pressed anymore
+
     [SerializeField] GameObject dotPrefab;
     [SerializeField] float dotsSpacing = 45f;
 
@@ -116,6 +118,7 @@ public class DotGrid : MonoBehaviour
     {
         if (mergeTargetDots.IndexOf(dot) != -1)
         {
+            // pressed dot is currently a target of a merge anim, pass!
             return;
         }
 
@@ -124,16 +127,19 @@ public class DotGrid : MonoBehaviour
             Dot last = dotsChain[^1];
             if ((last.gridPosition - dot.gridPosition).magnitude > 1.5f)
             {
+                // not a neighbour
                 return;
             }
 
             if (last.Value != dot.Value)
             {
+                // wrong value
                 return;
             }
         }
 
         dot.SetPressed(true);
+        eventDotPressed.Fire(dot);
         if (dotsChain.Count == 0)
         {
             Color lineColor = dot.GetColor();
@@ -199,6 +205,8 @@ public class DotGrid : MonoBehaviour
         {
             RemoveDotFromChain(dotsChain[i]);
         }
+
+        eventDotsReleased.Fire();
     }
 
     void OnDotKilled(Dot dot)

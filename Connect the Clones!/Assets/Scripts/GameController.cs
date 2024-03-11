@@ -14,7 +14,8 @@ public class GameController : MonoBehaviour
 
     void OnDotsChainUpdated(Dot dot, int dotsCount)
     {
-        previewDot.Value = dotsCount > 1 ? dot.Value + 1 : dot.Value;
+        int newValue = dot.Value + DotGrid.GetChainValue(dotsCount);
+        previewDot.Value = dotsCount > 1 ? newValue : dot.Value;
         previewDot.gameObject.SetActive(dotsCount > 0);
     }
 

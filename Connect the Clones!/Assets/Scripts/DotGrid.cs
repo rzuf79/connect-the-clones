@@ -12,6 +12,7 @@ public class DotGrid : MonoBehaviour
     private List<Dot> dotsChain = new List<Dot>();
     private List<Dot> mergeTargetDots = new List<Dot>(); // Dots that are currently merget into
     private LineRenderer lineRenderer;
+    private int lastChainCount = 0;
 
     void Start()
     {
@@ -55,14 +56,12 @@ public class DotGrid : MonoBehaviour
 
     void RandomizeGrid(int minValue, int maxValue)
     {
-        int tries = 0;
         do
         {
             for (int i = 0; i < dots.Length; ++i)
             {
                 dots[i].Value = Random.Range(minValue, maxValue+1);
             }
-            tries ++;
         } while(IsBoardStuck());
     }
 
@@ -92,8 +91,6 @@ public class DotGrid : MonoBehaviour
 
     bool IsBoardStuck()
     {
-        Dot[] aliveDots = System.Array.FindAll(dots, dot => !dot.IsDead());
-
         for (int i = 0; i < dots.Length; ++i)
         {
             if (dots[i].IsDead())
@@ -194,6 +191,8 @@ public class DotGrid : MonoBehaviour
 
     void ClearDotsChain()
     {
+        lastChainCount = dotsChain.Count;
+        
         for (int i = 0; i < dots.Length; ++i)
         {
             dots[i].SetPressed(false);
@@ -215,12 +214,28 @@ public class DotGrid : MonoBehaviour
         }
     }
 
+    public static int GetChainValue(int chainLength)
+    {
+        int result = 1;
+        int power = 0;
+        while (result < chainLength)
+        {
+            result *= 2;
+            if (result > chainLength) 
+            {
+                return power;
+            }
+            power ++;
+        }
+        return power;
+    }
+
     void OnDotsMergeFlyFinished(Dot dot)
     {
         Dot target = dot.GetMergeTargetDot();
 
         dot.eventMergeFinished -= OnDotsMergeFlyFinished;
-        target.Value ++;
+        target.Value += DotGrid.GetChainValue(lastChainCount);
         target.AnimateIncrement();
         target.eventSpawnAnimFinished += OnMergedDotSpawnAnimFinished;
 
